@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { HeartIcon, BookmarkPlusIcon } from 'lucide-react';
+import { fetchAnimeFull } from '../../utils/jikanApi.js';
 
 function AnimeCard({
   animeObj,
@@ -11,6 +12,7 @@ function AnimeCard({
 }) {
   const [liked, setLiked] = useState(false);
   const [fullData, setFullData] = useState(null);
+  const [isLoadingFullData, setIsLoadingFullData] = useState(false);
 
   const isInWatchList = watchList.some((a) => a.mal_id === animeObj.mal_id);
 
@@ -23,11 +25,36 @@ function AnimeCard({
   };
 
   // Fetch full anime data to get relations (prequel/sequel info)
+  // Загружаем только при необходимости (ленивая загрузка)
   useEffect(() => {
-    fetch(`https://api.jikan.moe/v4/anime/${animeObj.mal_id}/full`)
-      .then((res) => res.json())
-      .then((data) => setFullData(data.data))
-      .catch((err) => console.error('Error fetching full anime data:', err));
+    let isMounted = true;
+    
+    // Задержка для распределения запросов
+    const delay = Math.random() * 1000; // Случайная задержка 0-1 секунда
+    
+    const timer = setTimeout(async () => {
+      setIsLoadingFullData(true);
+      try {
+        const data = await fetchAnimeFull(animeObj.mal_id);
+        if (isMounted && data?.data) {
+          setFullData(data.data);
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error('Error fetching full anime data:', err);
+          // Не показываем ошибку пользователю, просто используем базовые данные
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingFullData(false);
+        }
+      }
+    }, delay);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
   }, [animeObj.mal_id]);
 
   // Safe destructuring
@@ -66,7 +93,11 @@ function AnimeCard({
 
           {/* Total Seasons */}
           <p className="text-sm text-pink-300 mb-1">
-            {totalSeasons} {totalSeasons === 1 ? 'Season' : 'Seasons'}
+            {isLoadingFullData ? (
+              'Loading...'
+            ) : (
+              `${totalSeasons} ${totalSeasons === 1 ? 'Season' : 'Seasons'}`
+            )}
           </p>
 
           {/* Episodes */}

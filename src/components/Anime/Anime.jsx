@@ -60,21 +60,23 @@ function Anime() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page]);
 
-  if (!loading) (
-    <div className='overflow-hidden'>
-      <HomePageBannerSkeleton />
+  if (loading) {
+    return (
+      <div className='overflow-hidden'>
+        <HomePageBannerSkeleton />
 
-      <div className='w-full text-3xl text-center p-5 m-4'>
-        {searchQuery ? `Search Results for "${searchQuery}"` : 'Trending Anime'}
-      </div>
+        <div className='w-full text-3xl text-center p-5 m-4'>
+          {searchQuery ? `Search Results for "${searchQuery}"` : 'Trending Anime'}
+        </div>
 
-      <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 p-4'>
-        {[...Array(25)].map(() => (
-          <AnimeCardSkeleton />
-        ))}
+        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 p-4'>
+          {[...Array(25)].map((_, index) => (
+            <AnimeCardSkeleton key={`skeleton-${index}`} />
+          ))}
+        </div>
       </div>
-    </div>
-  )
+    );
+  }
 
   return (
     <div className='overflow-hidden'>
@@ -100,8 +102,8 @@ function Anime() {
           </div>
           :
           <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 p-4'>
-            {[...Array(25)].map(() => (
-              <AnimeCardSkeleton />
+            {[...Array(25)].map((_, index) => (
+              <AnimeCardSkeleton key={`skeleton-empty-${index}`} />
             ))}
           </div>
         }
